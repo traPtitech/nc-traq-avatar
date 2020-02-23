@@ -22,9 +22,10 @@ declare(strict_types=1);
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace OCA\Gravatar\Hooks;
+namespace OCA\TraqAvatar\Hooks;
 
-use OCA\Gravatar\Handler\SyncUserAvatarHandler;
+use OC\User\User;
+use OCA\TraqAvatar\Handler\SyncUserAvatarHandler;
 use OCP\IUserSession;
 
 /**
@@ -61,13 +62,25 @@ class UserSessionHook {
 		$this->userSession->listen('\OC\User', 'postLogin', [$this, 'onPostLogin']);
 	}
 
-	/**
-	 * Syncs the user avatar on login.
-	 *
-	 * @return void
-	 */
-	public function onPostLogin() {
-		$user = $this->userSession->getUser();
+	public function sync() {
+	    if (!$this->userSession->isLoggedIn()) {
+	        return;
+        }
+	    $user = $this->userSession->getUser();
+	    if (empty($user)) {
+	        return;
+        }
+	    $this->syncUserAvatarHandler->sync($user);
+    }
+
+    /**
+     * Syncs the user avatar on login.
+     *
+     * @param User $user
+     * @param string $password
+     * @return void
+     */
+	public function onPostLogin(User $user, string $password) {
 		$this->syncUserAvatarHandler->sync($user);
 	}
 }

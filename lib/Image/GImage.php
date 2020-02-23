@@ -1,5 +1,5 @@
 <?php
-namespace OCA\Gravatar\Image;
+namespace OCA\TraqAvatar\Image;
 
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.

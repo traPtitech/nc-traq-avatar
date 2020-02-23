@@ -22,23 +22,24 @@ declare(strict_types=1);
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace OCA\Gravatar\Handler;
+namespace OCA\TraqAvatar\Handler;
 
-use OCA\Gravatar\GlobalAvatar\GlobalAvatarService;
+use Exception;
+use OCA\TraqAvatar\Avatar\AvatarService;
 use OCP\Files\NotFoundException;
 use OCP\IAvatarManager;
 use OCP\IImage;
 use OCP\IUser;
 
 /**
- * Checks whether there is an global avatar for the current user and
+ * Checks whether there is an avatar for the current user and
  * updates the avatar directly.
  */
 class DirectUpdateSyncUserAvatarHandler implements SyncUserAvatarHandler {
 	/**
-	 * @var GlobalAvatarService
+	 * @var AvatarService
 	 */
-	private $globalAvatarService;
+	private $avatarService;
 
 	/**
 	 * @var IAvatarManager
@@ -48,23 +49,23 @@ class DirectUpdateSyncUserAvatarHandler implements SyncUserAvatarHandler {
 	/**
 	 * DirectUpdateSyncUserAvatarHandler constructor.
 	 *
-	 * @param GlobalAvatarService $globalAvatarService
+	 * @param AvatarService $avatarService
 	 * @param IAvatarManager $avatarManager
 	 */
-	public function __construct(GlobalAvatarService $globalAvatarService, IAvatarManager $avatarManager) {
-		$this->globalAvatarService = $globalAvatarService;
+	public function __construct(AvatarService $avatarService, IAvatarManager $avatarManager) {
+		$this->avatarService = $avatarService;
 		$this->avatarManager = $avatarManager;
 	}
 
 	/**
-	 * Queries the global avatar.
+	 * Queries the avatar.
 	 * If there is one updates the user's avatar.
 	 *
-	 * @param IUser $user The user to check the global avatar for.
+	 * @param IUser $user The user to check the avatar for.
 	 * @return void
 	 */
 	public function sync(IUser $user) {
-		$avatar = $this->globalAvatarService->query($user);
+		$avatar = $this->avatarService->query($user);
 		if ($avatar !== null) {
 			$this->storeUserAvatar($user, $avatar);
 		}
@@ -82,6 +83,6 @@ class DirectUpdateSyncUserAvatarHandler implements SyncUserAvatarHandler {
 			$userAvatar = $this->avatarManager->getAvatar($user->getUID());
 			$userAvatar->set($avatar);
 		} catch (NotFoundException $ignore) {
-		} catch (\Exception $ignore) {}
+		} catch (Exception $ignore) {}
 	}
 }

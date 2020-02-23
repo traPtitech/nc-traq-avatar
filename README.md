@@ -1,5 +1,7 @@
 # Gravatar integration for Nextcloud
 
+This plugin is a fork of https://github.com/weeman1337/nextcloud-gravatar.
+
 **This app adds Gravatar support to your Nextcloud.**
 
 Gravatar is an online service where users can upload an avatar linked to their email address.

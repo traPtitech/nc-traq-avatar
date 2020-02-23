@@ -22,27 +22,21 @@ declare(strict_types=1);
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace OCA\Gravatar\AppInfo;
+namespace OCA\TraqAvatar\AppInfo;
 
-use OCA\Gravatar\GlobalAvatar\GlobalAvatarService;
-use OCA\Gravatar\GlobalAvatar\GravatarService;
-use OCA\Gravatar\Handler\AskSyncUserAvatarHandler;
-use OCA\Gravatar\Handler\DirectUpdateSyncUserAvatarHandler;
-use OCA\Gravatar\Handler\SyncUserAvatarHandler;
-use OCA\Gravatar\Hooks\UserSessionHook;
-use OCA\Gravatar\Notification\Notifier;
-use OCA\Gravatar\Settings\SecuritySettings;
+use OCA\TraqAvatar\Avatar\AvatarService;
+use OCA\TraqAvatar\Avatar\TraqAvatarService;
+use OCA\TraqAvatar\Handler\DirectUpdateSyncUserAvatarHandler;
+use OCA\TraqAvatar\Handler\SyncUserAvatarHandler;
+use OCA\TraqAvatar\Hooks\UserSessionHook;
 use \OCP\AppFramework\App;
-use OCP\IContainer;
-use OCP\IServerContainer;
 
 /**
- * The gravatar app.
+ * The app.
  */
 class Application extends App {
 
-	const APP_ID = 'gravatar';
-	const APP_NAME = 'Gravatar';
+	const APP_ID = 'TraqAvatar';
 
 	/**
 	 * Application constructor.
@@ -56,29 +50,19 @@ class Application extends App {
 		$container = $this->getContainer();
 		$server = $container->getServer();
 
-		$container->registerService(GlobalAvatarService::class, function() use ($server) {
+		$container->registerService(AvatarService::class, function() use ($server) {
 			$httpClient = $server->getHTTPClientService()->newClient();
-			return new GravatarService($httpClient);
+			return new TraqAvatarService($httpClient, $server->getLogger());
 		});
 
 		$container->registerService(DirectUpdateSyncUserAvatarHandler::class, function() use ($server, $container) {
-			$globalAvatarService = $container->query(GlobalAvatarService::class);
+			$avatarService = $container->query(AvatarService::class);
 			$avatarManager = $server->getAvatarManager();
-			return new DirectUpdateSyncUserAvatarHandler($globalAvatarService, $avatarManager);
+			return new DirectUpdateSyncUserAvatarHandler($avatarService, $avatarManager);
 		});
 
 		$container->registerService(SyncUserAvatarHandler::class, function() use ($container, $server) {
-			$config = $server->getConfig();
-			$askUser = $config->getAppValue(Application::APP_ID, SecuritySettings::SETTING_ASK_USER, 'no') === 'yes';
-
-			if ($askUser === true) {
-				$directUpdateSyncUserAvatarHandler = $container->query(DirectUpdateSyncUserAvatarHandler::class);
-				$notificationManager = $server->getNotificationManager();
-				$config = $server->getConfig();
-				return new AskSyncUserAvatarHandler($notificationManager, $config, $directUpdateSyncUserAvatarHandler);
-			} else {
-				return $container->query(DirectUpdateSyncUserAvatarHandler::class);
-			}
+            return $container->query(DirectUpdateSyncUserAvatarHandler::class);
 		});
 
 		$container->registerService(UserSessionHook::class, function() use ($server, $container) {
@@ -86,48 +70,5 @@ class Application extends App {
 			$syncUserAvatarHandler = $container->query(SyncUserAvatarHandler::class);
 			return new UserSessionHook($userSession, $syncUserAvatarHandler);
 		});
-
-		$this->registerNotifier($server, $container);
-	}
-
-	/**
-	 * Registers the gravatar notifier.
-	 *
-	 * @param IServerContainer $server
-	 * @param IContainer $container
-	 * @return void
-	 */
-	private function registerNotifier(IServerContainer $server, IContainer $container) {
-		$container->registerService(Notifier::class, function() use ($server) {
-			$lFactory = $server->getL10NFactory();
-			$urlGenerator = $server->getURLGenerator();
-			return new Notifier($lFactory, $urlGenerator);
-		});
-
-		$notificationManager = $server->getNotificationManager();
-		$notificationManager->registerNotifier(
-			function() use ($container) {
-				return $this->getContainer()->query(Notifier::class);
-			},
-			function () {
-				return [
-					'id' => Application::APP_ID,
-					'name' => Application::APP_NAME,
-				];
-			}
-		);
-	}
-
-	/**
-	 * Registers the Gravatar user settings if the "ask user" setting is enabled.
-	 *
-	 * @return void
-	 */
-	public function registerUserSettings() {
-		$config = $this->getContainer()->getServer()->getConfig();
-		$askUser = $config->getAppValue(Application::APP_ID, SecuritySettings::SETTING_ASK_USER, 'no') === 'yes';
-		if ($askUser === true) {
-			\OCP\App::registerPersonal(Application::APP_ID, 'personal');
-		}
 	}
 }

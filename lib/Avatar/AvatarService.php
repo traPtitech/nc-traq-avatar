@@ -22,11 +22,20 @@ declare(strict_types=1);
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-return [
-	'routes' => [
-		['name' => 'Settings#enableAskUserSetting', 'url' => '/settings/askUser/enable', 'verb' => 'GET',],
-		['name' => 'Settings#disableAskUserSetting', 'url' => '/settings/askUser/disable', 'verb' => 'GET',],
-		['name' => 'Settings#enableUserGravatar', 'url' => '/settings/useGravatar/enable', 'verb' => 'GET',],
-		['name' => 'Settings#disableUserGravatar', 'url' => '/settings/useGravatar/disable', 'verb' => 'GET',],
-	]
-];
+namespace OCA\TraqAvatar\Avatar;
+
+use OCP\IImage;
+use OCP\IUser;
+
+/**
+ * Interface for avatar services.
+ */
+interface AvatarService {
+	/**
+	 * Queries the avatar for an user.
+	 *
+	 * @param IUser $user The user to query the avatar for.
+	 * @return IImage|null The avatar as image or null if none found.
+	 */
+	public function query(IUser $user);
+}

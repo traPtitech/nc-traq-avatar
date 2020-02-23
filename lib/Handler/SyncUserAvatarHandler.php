@@ -22,7 +22,7 @@ declare(strict_types=1);
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace OCA\Gravatar\Handler;
+namespace OCA\TraqAvatar\Handler;
 
 use OCP\IUser;
 
@@ -31,7 +31,7 @@ use OCP\IUser;
  */
 interface SyncUserAvatarHandler {
 	/**
-	 * Implementers should check if there is a global avatar for the user.
+	 * Implementers should check if there is a avatar for the user.
 	 *
 	 * @param IUser $user The user to sync the avatar for.
 	 * @return void

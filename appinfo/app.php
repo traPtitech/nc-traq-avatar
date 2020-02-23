@@ -22,10 +22,15 @@ declare(strict_types=1);
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use OCA\Gravatar\AppInfo\Application;
+use OCA\TraqAvatar\AppInfo\Application;
 
 $app = new Application();
-$app->registerUserSettings();
-$container = $app->getContainer();
-$userSessionHooks = $container->query(\OCA\Gravatar\Hooks\UserSessionHook::class);
-$userSessionHooks->register();
+if (strpos($_SERVER["REQUEST_URI"], "/login") === 0) {
+    $container = $app->getContainer();
+    $userSessionHooks = $container->query(OCA\TraqAvatar\Hooks\UserSessionHook::class);
+    if ($_SERVER["REQUEST_METHOD"] === "GET") {
+        $userSessionHooks->sync();
+    } elseif ($_SERVER["REQUEST_METHOD"] === "POST") {
+        $userSessionHooks->register();
+    }
+}

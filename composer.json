@@ -1,25 +1,20 @@
 {
-    "name": "Gravatar",
-    "description": "Adds Gravatar support to Nextcloud",
+    "name": "traq_avatar",
+    "description": "Nextcloud plugin for traQ avatar integration",
     "type": "project",
     "license": "AGPL",
     "authors": [
         {
             "name": "Michael Weimann"
+        },
+        {
+            "name": "traP System Administrators"
         }
     ],
     "require": {},
-    "require-dev": {
-        "phpunit/phpunit": "^5.4"
-    },
     "autoload": {
         "psr-4": {
-            "OCA\\Gravatar\\": "lib/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "OCA\\Gravatar\\Test\\": "test/Unit/"
+            "OCA\\TraqAvatar\\": "lib/"
         }
     }
 }

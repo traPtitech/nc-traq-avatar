@@ -22,64 +22,73 @@ declare(strict_types=1);
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace OCA\Gravatar\GlobalAvatar;
+namespace OCA\TraqAvatar\Avatar;
 
+use Exception;
 use OC\AppFramework\Http;
-use OCA\Gravatar\Image\GImage;
+use OCA\TraqAvatar\Image\GImage;
 use OCP\Http\Client\IClient;
 use OCP\IImage;
+use OCP\ILogger;
 use OCP\IUser;
 
 /**
- * Global avatar service implementation using gravatar to query the avatar.
+ * Traq avatar service implementation using traQ to query the avatar.
  */
-class GravatarService implements GlobalAvatarService {
+class TraqAvatarService implements AvatarService {
 
-	const GRAVATAR_URL = 'https://www.gravatar.com/avatar/%s?d=404&s=200';
+	const TRAQ_AVATAR_URL = 'https://q.trap.jp/api/1.0/public/icon/%s';
 
 	/**
 	 * @var IClient
 	 */
 	private $httpClient;
 
+    /**
+     * @var ILogger
+     */
+	private $logger;
+
 	/**
-	 * GravatarService constructor.
+	 * TraqAvatarService constructor.
 	 *
 	 * @param IClient $httpClient
+     * @param ILogger $logger
 	 */
-	public function __construct(IClient $httpClient) {
+	public function __construct(IClient $httpClient, ILogger $logger) {
 		$this->httpClient = $httpClient;
+		$this->logger = $logger;
 	}
 
 	/**
-	 * Retrieves the user's global avatar from gravatar.
+	 * Retrieves the user's avatar from traQ.
 	 *
 	 * @param IUser $user
 	 * @return null|IImage
 	 */
 	public function query(IUser $user) {
-		$email = $user->getEMailAddress();
-		if (empty($email) === false) {
-			$response = $this->fetchFromGravatar($email);
+		$id = $user->getUID();
+		if (!empty($id)) {
+			$response = $this->fetchFromTraq($id);
 		} else {
-			$response = null;
+		    $this->logger->info("User ID empty");
+            $response = null;
 		}
 		return $response;
 	}
 
 	/**
-	 * Fetches the global avatar from gravatar.
+	 * Fetches avatar from traQ.
 	 *
-	 * @param string $email	The email address to retrieve the global avatar for.
+	 * @param string $id The traQ ID to retrieve avatar for.
 	 * @return null|IImage The avatar as image or null if none found.
 	 */
-	private function fetchFromGravatar(string $email) {
-		$emailHash = $this->getHashedEmail($email);
-		$requestUrl = $this->buildGravatarRequestUrl($emailHash);
+	private function fetchFromTraq(string $id) {
+		$requestUrl = $this->buildTraqRequestUrl($id);
 
 		try {
 			$response = $this->httpClient->get($requestUrl);
-		} catch (\Exception $e) {
+		} catch (Exception $e) {
 			return null;
 		}
 
@@ -88,34 +97,24 @@ class GravatarService implements GlobalAvatarService {
 		if ($response->getStatusCode() === Http::STATUS_OK) {
 			$avatarData = $response->getBody();
 			$avatarImage = new GImage();
-			if ($avatarImage->loadFromData($avatarData) !== false) {
+			if ($avatarImage->loadFromData($avatarData)) {
 				 $avatar = $avatarImage;
-			}
+			} else {
+			    $this->logger->error("Failed to load image from data");
+            }
 		}
+
 
 		return $avatar;
 	}
 
 	/**
-	 * Hashes the email for gravatar.
+	 * Builds the traQ avatar request url.
 	 *
-	 * @param string $email
+	 * @param string $traqId The traQ ID
 	 * @return string
 	 */
-	private function getHashedEmail(string $email): string {
-		$trimmed = trim($email);
-		$lowerCased = strtolower($trimmed);
-		$hashed = md5($lowerCased);
-		return $hashed;
-	}
-
-	/**
-	 * Builds the gravatar avatar request url.
-	 *
-	 * @param string $emailHash The email hash
-	 * @return string
-	 */
-	private function buildGravatarRequestUrl(string $emailHash): string {
-		return sprintf(self::GRAVATAR_URL, $emailHash);
+	private function buildTraqRequestUrl(string $traqId): string {
+		return sprintf(self::TRAQ_AVATAR_URL, $traqId);
 	}
 }
