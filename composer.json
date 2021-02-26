@@ -1,5 +1,5 @@
 {
-    "name": "traq_avatar",
+    "name": "trap/traq_avatar",
     "description": "Nextcloud plugin for traQ avatar integration",
     "type": "project",
     "license": "AGPL",
