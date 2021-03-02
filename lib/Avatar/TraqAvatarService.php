@@ -26,11 +26,11 @@ namespace OCA\TraqAvatar\Avatar;
 
 use Exception;
 use OC\AppFramework\Http;
-use OCA\TraqAvatar\Image\GImage;
+use OC_Image;
 use OCP\Http\Client\IClient;
 use OCP\IImage;
-use OCP\ILogger;
 use OCP\IUser;
+use Psr\Log\LoggerInterface;
 
 /**
  * Traq avatar service implementation using traQ to query the avatar.
@@ -42,20 +42,20 @@ class TraqAvatarService implements AvatarService {
 	/**
 	 * @var IClient
 	 */
-	private $httpClient;
+	private IClient $httpClient;
 
     /**
-     * @var ILogger
+     * @var LoggerInterface
      */
-	private $logger;
+	private LoggerInterface $logger;
 
 	/**
 	 * TraqAvatarService constructor.
 	 *
 	 * @param IClient $httpClient
-     * @param ILogger $logger
+     * @param LoggerInterface $logger
 	 */
-	public function __construct(IClient $httpClient, ILogger $logger) {
+	public function __construct(IClient $httpClient, LoggerInterface $logger) {
 		$this->httpClient = $httpClient;
 		$this->logger = $logger;
 	}
@@ -96,7 +96,7 @@ class TraqAvatarService implements AvatarService {
 
 		if ($response->getStatusCode() === Http::STATUS_OK) {
 			$avatarData = $response->getBody();
-			$avatarImage = new GImage();
+			$avatarImage = new OC_Image();
 			if ($avatarImage->loadFromData($avatarData)) {
 				 $avatar = $avatarImage;
 			} else {

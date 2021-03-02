@@ -30,11 +30,20 @@ use OCA\TraqAvatar\Handler\DirectUpdateSyncUserAvatarHandler;
 use OCA\TraqAvatar\Handler\SyncUserAvatarHandler;
 use OCA\TraqAvatar\Hooks\UserSessionHook;
 use \OCP\AppFramework\App;
+use OCP\AppFramework\Bootstrap\IBootContext;
+use OCP\AppFramework\Bootstrap\IBootstrap;
+use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\Http\Client\IClientService;
+use OCP\IAvatarManager;
+use OCP\IRequest;
+use OCP\IUserSession;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * The app.
  */
-class Application extends App {
+class Application extends App implements IBootstrap {
 
 	const APP_ID = 'TraqAvatar';
 
@@ -46,29 +55,33 @@ class Application extends App {
 	 */
 	public function __construct(array $urlParams=array()) {
 		parent::__construct(self::APP_ID, $urlParams);
-
-		$container = $this->getContainer();
-		$server = $container->getServer();
-
-		$container->registerService(AvatarService::class, function() use ($server) {
-			$httpClient = $server->getHTTPClientService()->newClient();
-			return new TraqAvatarService($httpClient, $server->getLogger());
-		});
-
-		$container->registerService(DirectUpdateSyncUserAvatarHandler::class, function() use ($server, $container) {
-			$avatarService = $container->query(AvatarService::class);
-			$avatarManager = $server->getAvatarManager();
-			return new DirectUpdateSyncUserAvatarHandler($avatarService, $avatarManager);
-		});
-
-		$container->registerService(SyncUserAvatarHandler::class, function() use ($container, $server) {
-            return $container->query(DirectUpdateSyncUserAvatarHandler::class);
-		});
-
-		$container->registerService(UserSessionHook::class, function() use ($server, $container) {
-			$userSession = $server->getUserSession();
-			$syncUserAvatarHandler = $container->query(SyncUserAvatarHandler::class);
-			return new UserSessionHook($userSession, $syncUserAvatarHandler);
-		});
 	}
+
+    public function register(IRegistrationContext $context): void {
+        $context->registerService(AvatarService::class, function(ContainerInterface $c) {
+            return new TraqAvatarService(
+                $c->get(IClientService::class)->newClient(),
+                $c->get(LoggerInterface::class)
+            );
+        });
+
+        $context->registerService(SyncUserAvatarHandler::class, function(ContainerInterface $c) {
+            return new DirectUpdateSyncUserAvatarHandler(
+                $c->get(AvatarService::class),
+                $c->get(IAvatarManager::class)
+            );
+        });
+
+        $context->registerService(UserSessionHook::class, function(ContainerInterface $c) {
+            return new UserSessionHook(
+                $c->get(IRequest::class),
+                $c->get(IUserSession::class),
+                $c->get(SyncUserAvatarHandler::class)
+            );
+        });
+    }
+
+    public function boot(IBootContext $context): void {
+	    $context->getAppContainer()->get(UserSessionHook::class)->handle();
+    }
 }
