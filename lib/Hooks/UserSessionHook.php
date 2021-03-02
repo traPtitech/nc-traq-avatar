@@ -24,63 +24,47 @@ declare(strict_types=1);
 
 namespace OCA\TraqAvatar\Hooks;
 
-use OC\User\User;
 use OCA\TraqAvatar\Handler\SyncUserAvatarHandler;
+use OCP\IRequest;
 use OCP\IUserSession;
 
 /**
  * This class handles user session hooks.
  */
 class UserSessionHook {
-	/**
-	 * @var IUserSession
-	 */
-	private $userSession;
-
-	/**
-	 * @var SyncUserAvatarHandler
-	 */
-	private $syncUserAvatarHandler;
+    /** @var IRequest */
+	private IRequest $request;
+	/** @var IUserSession */
+	private IUserSession $session;
+	/** @var SyncUserAvatarHandler */
+	private SyncUserAvatarHandler $syncUserAvatarHandler;
 
 	/**
 	 * UserSessionHook constructor.
 	 *
-	 * @param IUserSession $userSession
+     * @param IRequest $request
+     * @param IUserSession $session
 	 * @param SyncUserAvatarHandler $syncUserAvatarHandler
 	 */
-	public function __construct(IUserSession $userSession, SyncUserAvatarHandler $syncUserAvatarHandler) {
-		$this->userSession = $userSession;
+	public function __construct(IRequest $request,
+                                IUserSession $session,
+                                SyncUserAvatarHandler $syncUserAvatarHandler) {
+	    $this->request = $request;
+        $this->session = $session;
 		$this->syncUserAvatarHandler = $syncUserAvatarHandler;
 	}
 
-	/**
-	 * Registers the hooks.
-	 *
-	 * @return void
-	 */
-	public function register() {
-		$this->userSession->listen('\OC\User', 'postLogin', [$this, 'onPostLogin']);
-	}
-
-	public function sync() {
-	    if (!$this->userSession->isLoggedIn()) {
+    public function handle(): void {
+	    if (strpos($this->request->getRequestUri(), "/index.php/login") !== 0) {
 	        return;
         }
-	    $user = $this->userSession->getUser();
-	    if (empty($user)) {
+	    if (!$this->session->isLoggedIn()) {
 	        return;
         }
-	    $this->syncUserAvatarHandler->sync($user);
+	    $user = $this->session->getUser();
+        if (empty($user)) {
+            return;
+        }
+        $this->syncUserAvatarHandler->sync($user);
     }
-
-    /**
-     * Syncs the user avatar on login.
-     *
-     * @param User $user
-     * @param string $password
-     * @return void
-     */
-	public function onPostLogin(User $user, string $password) {
-		$this->syncUserAvatarHandler->sync($user);
-	}
 }
