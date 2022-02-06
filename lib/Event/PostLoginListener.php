@@ -22,49 +22,36 @@ declare(strict_types=1);
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace OCA\TraqAvatar\Hooks;
+namespace OCA\TraqAvatar\Event;
 
 use OCA\TraqAvatar\Handler\SyncUserAvatarHandler;
-use OCP\IRequest;
-use OCP\IUserSession;
+use OCP\EventDispatcher\Event;
+use OCP\User\Events\PostLoginEvent;
 
 /**
- * This class handles user session hooks.
+ * This class listens for post login event.
  */
-class UserSessionHook
+class PostLoginListener
 {
-    /** @var IRequest */
-    private IRequest $request;
-    /** @var IUserSession */
-    private IUserSession $session;
     /** @var SyncUserAvatarHandler */
     private SyncUserAvatarHandler $syncUserAvatarHandler;
 
     /**
-     * UserSessionHook constructor.
+     * PostLoginListener constructor.
      *
-     * @param IRequest $request
-     * @param IUserSession $session
      * @param SyncUserAvatarHandler $syncUserAvatarHandler
      */
-    public function __construct(IRequest              $request,
-                                IUserSession          $session,
-                                SyncUserAvatarHandler $syncUserAvatarHandler)
+    public function __construct(SyncUserAvatarHandler $syncUserAvatarHandler)
     {
-        $this->request = $request;
-        $this->session = $session;
         $this->syncUserAvatarHandler = $syncUserAvatarHandler;
     }
 
-    public function handle(): void
+    public function handle(Event $event): void
     {
-        if (strpos($this->request->getRequestUri(), "/login") !== 0) {
+        if (!($event instanceof PostLoginEvent)) {
             return;
         }
-        if (!$this->session->isLoggedIn()) {
-            return;
-        }
-        $user = $this->session->getUser();
+        $user = $event->getUser();
         if (empty($user)) {
             return;
         }

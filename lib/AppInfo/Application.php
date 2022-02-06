@@ -26,17 +26,17 @@ namespace OCA\TraqAvatar\AppInfo;
 
 use OCA\TraqAvatar\Avatar\AvatarService;
 use OCA\TraqAvatar\Avatar\TraqAvatarService;
+use OCA\TraqAvatar\Event\PostLoginListener;
 use OCA\TraqAvatar\Handler\DirectUpdateSyncUserAvatarHandler;
 use OCA\TraqAvatar\Handler\SyncUserAvatarHandler;
-use OCA\TraqAvatar\Hooks\UserSessionHook;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClientService;
 use OCP\IAvatarManager;
-use OCP\IRequest;
-use OCP\IUserSession;
+use OCP\User\Events\PostLoginEvent;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -57,6 +57,12 @@ class Application extends App implements IBootstrap
     public function __construct(array $urlParams = array())
     {
         parent::__construct(self::APP_ID, $urlParams);
+
+        // OCP event dispatcher (recommended as of OC 23)
+        // https://docs.nextcloud.com/server/latest/developer_manual/basics/events.html
+        /** @var IEventDispatcher $dispatcher */
+        $dispatcher = $this->getContainer()->get(IEventDispatcher::class);
+        $dispatcher->addServiceListener(PostLoginEvent::class, PostLoginListener::class);
     }
 
     public function register(IRegistrationContext $context): void
@@ -75,10 +81,8 @@ class Application extends App implements IBootstrap
             );
         });
 
-        $context->registerService(UserSessionHook::class, function (ContainerInterface $c) {
-            return new UserSessionHook(
-                $c->get(IRequest::class),
-                $c->get(IUserSession::class),
+        $context->registerService(PostLoginListener::class, function (ContainerInterface $c) {
+            return new PostLoginListener(
                 $c->get(SyncUserAvatarHandler::class)
             );
         });
@@ -86,6 +90,6 @@ class Application extends App implements IBootstrap
 
     public function boot(IBootContext $context): void
     {
-        $context->getAppContainer()->get(UserSessionHook::class)->handle();
+        // no-op
     }
 }

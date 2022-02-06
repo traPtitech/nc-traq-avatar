@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
 class TraqAvatarService implements AvatarService
 {
 
-    const TRAQ_AVATAR_URL = 'https://q.trap.jp/api/1.0/public/icon/%s';
+    const TRAQ_AVATAR_URL = 'https://q.trap.jp/api/v3/public/icon/%s';
 
     /**
      * @var IClient
