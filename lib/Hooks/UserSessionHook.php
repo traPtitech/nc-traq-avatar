@@ -31,37 +31,40 @@ use OCP\IUserSession;
 /**
  * This class handles user session hooks.
  */
-class UserSessionHook {
+class UserSessionHook
+{
     /** @var IRequest */
-	private IRequest $request;
-	/** @var IUserSession */
-	private IUserSession $session;
-	/** @var SyncUserAvatarHandler */
-	private SyncUserAvatarHandler $syncUserAvatarHandler;
+    private IRequest $request;
+    /** @var IUserSession */
+    private IUserSession $session;
+    /** @var SyncUserAvatarHandler */
+    private SyncUserAvatarHandler $syncUserAvatarHandler;
 
-	/**
-	 * UserSessionHook constructor.
-	 *
+    /**
+     * UserSessionHook constructor.
+     *
      * @param IRequest $request
      * @param IUserSession $session
-	 * @param SyncUserAvatarHandler $syncUserAvatarHandler
-	 */
-	public function __construct(IRequest $request,
-                                IUserSession $session,
-                                SyncUserAvatarHandler $syncUserAvatarHandler) {
-	    $this->request = $request;
+     * @param SyncUserAvatarHandler $syncUserAvatarHandler
+     */
+    public function __construct(IRequest              $request,
+                                IUserSession          $session,
+                                SyncUserAvatarHandler $syncUserAvatarHandler)
+    {
+        $this->request = $request;
         $this->session = $session;
-		$this->syncUserAvatarHandler = $syncUserAvatarHandler;
-	}
+        $this->syncUserAvatarHandler = $syncUserAvatarHandler;
+    }
 
-    public function handle(): void {
-	    if (strpos($this->request->getRequestUri(), "/index.php/login") !== 0) {
-	        return;
+    public function handle(): void
+    {
+        if (strpos($this->request->getRequestUri(), "/index.php/login") !== 0) {
+            return;
         }
-	    if (!$this->session->isLoggedIn()) {
-	        return;
+        if (!$this->session->isLoggedIn()) {
+            return;
         }
-	    $user = $this->session->getUser();
+        $user = $this->session->getUser();
         if (empty($user)) {
             return;
         }
