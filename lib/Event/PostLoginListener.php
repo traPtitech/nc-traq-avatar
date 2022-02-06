@@ -26,12 +26,13 @@ namespace OCA\TraqAvatar\Event;
 
 use OCA\TraqAvatar\Handler\SyncUserAvatarHandler;
 use OCP\EventDispatcher\Event;
+use OCP\EventDispatcher\IEventListener;
 use OCP\User\Events\PostLoginEvent;
 
 /**
  * This class listens for post login event.
  */
-class PostLoginListener
+class PostLoginListener implements IEventListener
 {
     /** @var SyncUserAvatarHandler */
     private SyncUserAvatarHandler $syncUserAvatarHandler;
