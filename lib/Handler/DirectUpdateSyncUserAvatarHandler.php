@@ -35,54 +35,59 @@ use OCP\IUser;
  * Checks whether there is an avatar for the current user and
  * updates the avatar directly.
  */
-class DirectUpdateSyncUserAvatarHandler implements SyncUserAvatarHandler {
-	/**
-	 * @var AvatarService
-	 */
-	private $avatarService;
+class DirectUpdateSyncUserAvatarHandler implements SyncUserAvatarHandler
+{
+    /**
+     * @var AvatarService
+     */
+    private $avatarService;
 
-	/**
-	 * @var IAvatarManager
-	 */
-	private $avatarManager;
+    /**
+     * @var IAvatarManager
+     */
+    private $avatarManager;
 
-	/**
-	 * DirectUpdateSyncUserAvatarHandler constructor.
-	 *
-	 * @param AvatarService $avatarService
-	 * @param IAvatarManager $avatarManager
-	 */
-	public function __construct(AvatarService $avatarService, IAvatarManager $avatarManager) {
-		$this->avatarService = $avatarService;
-		$this->avatarManager = $avatarManager;
-	}
+    /**
+     * DirectUpdateSyncUserAvatarHandler constructor.
+     *
+     * @param AvatarService $avatarService
+     * @param IAvatarManager $avatarManager
+     */
+    public function __construct(AvatarService $avatarService, IAvatarManager $avatarManager)
+    {
+        $this->avatarService = $avatarService;
+        $this->avatarManager = $avatarManager;
+    }
 
-	/**
-	 * Queries the avatar.
-	 * If there is one updates the user's avatar.
-	 *
-	 * @param IUser $user The user to check the avatar for.
-	 * @return void
-	 */
-	public function sync(IUser $user) {
-		$avatar = $this->avatarService->query($user);
-		if ($avatar !== null) {
-			$this->storeUserAvatar($user, $avatar);
-		}
-	}
+    /**
+     * Queries the avatar.
+     * If there is one updates the user's avatar.
+     *
+     * @param IUser $user The user to check the avatar for.
+     * @return void
+     */
+    public function sync(IUser $user)
+    {
+        $avatar = $this->avatarService->query($user);
+        if ($avatar !== null) {
+            $this->storeUserAvatar($user, $avatar);
+        }
+    }
 
-	/**
-	 * Stores the avatar of an user.
-	 *
-	 * @param IUser $user The user
-	 * @param IImage $avatar The avatar to set
-	 * @return void
-	 */
-	private function storeUserAvatar(IUser $user, IImage $avatar) {
-		try {
-			$userAvatar = $this->avatarManager->getAvatar($user->getUID());
-			$userAvatar->set($avatar);
-		} catch (NotFoundException $ignore) {
-		} catch (Exception $ignore) {}
-	}
+    /**
+     * Stores the avatar of an user.
+     *
+     * @param IUser $user The user
+     * @param IImage $avatar The avatar to set
+     * @return void
+     */
+    private function storeUserAvatar(IUser $user, IImage $avatar)
+    {
+        try {
+            $userAvatar = $this->avatarManager->getAvatar($user->getUID());
+            $userAvatar->set($avatar);
+        } catch (NotFoundException $ignore) {
+        } catch (Exception $ignore) {
+        }
+    }
 }

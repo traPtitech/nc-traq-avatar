@@ -29,12 +29,13 @@ use OCP\IUser;
 /**
  * Interface for user avatar sync handlers.
  */
-interface SyncUserAvatarHandler {
-	/**
-	 * Implementers should check if there is a avatar for the user.
-	 *
-	 * @param IUser $user The user to sync the avatar for.
-	 * @return void
-	 */
-	public function sync(IUser $user);
+interface SyncUserAvatarHandler
+{
+    /**
+     * Implementers should check if there is a avatar for the user.
+     *
+     * @param IUser $user The user to sync the avatar for.
+     * @return void
+     */
+    public function sync(IUser $user);
 }

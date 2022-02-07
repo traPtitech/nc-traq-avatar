@@ -26,62 +26,70 @@ namespace OCA\TraqAvatar\AppInfo;
 
 use OCA\TraqAvatar\Avatar\AvatarService;
 use OCA\TraqAvatar\Avatar\TraqAvatarService;
+use OCA\TraqAvatar\Event\PostLoginListener;
 use OCA\TraqAvatar\Handler\DirectUpdateSyncUserAvatarHandler;
 use OCA\TraqAvatar\Handler\SyncUserAvatarHandler;
-use OCA\TraqAvatar\Hooks\UserSessionHook;
-use \OCP\AppFramework\App;
+use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClientService;
 use OCP\IAvatarManager;
-use OCP\IRequest;
-use OCP\IUserSession;
+use OCP\User\Events\PostLoginEvent;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * The app.
  */
-class Application extends App implements IBootstrap {
+class Application extends App implements IBootstrap
+{
 
-	const APP_ID = 'TraqAvatar';
+    const APP_ID = 'TraqAvatar';
 
-	/**
-	 * Application constructor.
-	 * Registers the app's services.
-	 *
-	 * @param array $urlParams
-	 */
-	public function __construct(array $urlParams=array()) {
-		parent::__construct(self::APP_ID, $urlParams);
-	}
+    /**
+     * Application constructor.
+     * Registers the app's services.
+     *
+     * @param array $urlParams
+     */
+    public function __construct(array $urlParams = array())
+    {
+        parent::__construct(self::APP_ID, $urlParams);
 
-    public function register(IRegistrationContext $context): void {
-        $context->registerService(AvatarService::class, function(ContainerInterface $c) {
+        // OCP event dispatcher (recommended as of OC 23)
+        // https://docs.nextcloud.com/server/latest/developer_manual/basics/events.html
+        /** @var IEventDispatcher $dispatcher */
+        $dispatcher = $this->getContainer()->get(IEventDispatcher::class);
+        $dispatcher->addServiceListener(PostLoginEvent::class, PostLoginListener::class);
+    }
+
+    public function register(IRegistrationContext $context): void
+    {
+        $context->registerService(AvatarService::class, function (ContainerInterface $c) {
             return new TraqAvatarService(
                 $c->get(IClientService::class)->newClient(),
                 $c->get(LoggerInterface::class)
             );
         });
 
-        $context->registerService(SyncUserAvatarHandler::class, function(ContainerInterface $c) {
+        $context->registerService(SyncUserAvatarHandler::class, function (ContainerInterface $c) {
             return new DirectUpdateSyncUserAvatarHandler(
                 $c->get(AvatarService::class),
                 $c->get(IAvatarManager::class)
             );
         });
 
-        $context->registerService(UserSessionHook::class, function(ContainerInterface $c) {
-            return new UserSessionHook(
-                $c->get(IRequest::class),
-                $c->get(IUserSession::class),
+        $context->registerService(PostLoginListener::class, function (ContainerInterface $c) {
+            return new PostLoginListener(
                 $c->get(SyncUserAvatarHandler::class)
             );
         });
     }
 
-    public function boot(IBootContext $context): void {
-	    $context->getAppContainer()->get(UserSessionHook::class)->handle();
+    public function boot(IBootContext $context): void
+    {
+        // no-op
     }
 }

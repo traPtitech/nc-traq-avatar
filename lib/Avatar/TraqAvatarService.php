@@ -35,86 +35,91 @@ use Psr\Log\LoggerInterface;
 /**
  * Traq avatar service implementation using traQ to query the avatar.
  */
-class TraqAvatarService implements AvatarService {
+class TraqAvatarService implements AvatarService
+{
 
-	const TRAQ_AVATAR_URL = 'https://q.trap.jp/api/1.0/public/icon/%s';
+    const TRAQ_AVATAR_URL = 'https://q.trap.jp/api/v3/public/icon/%s';
 
-	/**
-	 * @var IClient
-	 */
-	private IClient $httpClient;
+    /**
+     * @var IClient
+     */
+    private IClient $httpClient;
 
     /**
      * @var LoggerInterface
      */
-	private LoggerInterface $logger;
+    private LoggerInterface $logger;
 
-	/**
-	 * TraqAvatarService constructor.
-	 *
-	 * @param IClient $httpClient
+    /**
+     * TraqAvatarService constructor.
+     *
+     * @param IClient $httpClient
      * @param LoggerInterface $logger
-	 */
-	public function __construct(IClient $httpClient, LoggerInterface $logger) {
-		$this->httpClient = $httpClient;
-		$this->logger = $logger;
-	}
+     */
+    public function __construct(IClient $httpClient, LoggerInterface $logger)
+    {
+        $this->httpClient = $httpClient;
+        $this->logger = $logger;
+    }
 
-	/**
-	 * Retrieves the user's avatar from traQ.
-	 *
-	 * @param IUser $user
-	 * @return null|IImage
-	 */
-	public function query(IUser $user) {
-		$id = $user->getUID();
-		if (!empty($id)) {
-			$response = $this->fetchFromTraq($id);
-		} else {
-		    $this->logger->info("User ID empty");
+    /**
+     * Retrieves the user's avatar from traQ.
+     *
+     * @param IUser $user
+     * @return null|IImage
+     */
+    public function query(IUser $user)
+    {
+        $id = $user->getUID();
+        if (!empty($id)) {
+            $response = $this->fetchFromTraq($id);
+        } else {
+            $this->logger->info("User ID empty");
             $response = null;
-		}
-		return $response;
-	}
+        }
+        return $response;
+    }
 
-	/**
-	 * Fetches avatar from traQ.
-	 *
-	 * @param string $id The traQ ID to retrieve avatar for.
-	 * @return null|IImage The avatar as image or null if none found.
-	 */
-	private function fetchFromTraq(string $id) {
-		$requestUrl = $this->buildTraqRequestUrl($id);
+    /**
+     * Fetches avatar from traQ.
+     *
+     * @param string $id The traQ ID to retrieve avatar for.
+     * @return null|IImage The avatar as image or null if none found.
+     */
+    private function fetchFromTraq(string $id)
+    {
+        $requestUrl = $this->buildTraqRequestUrl($id);
 
-		try {
-			$response = $this->httpClient->get($requestUrl);
-		} catch (Exception $e) {
-			return null;
-		}
+        try {
+            $response = $this->httpClient->get($requestUrl);
+        } catch (Exception $e) {
+            return null;
+        }
 
-		$avatar = null;
+        $avatar = null;
 
-		if ($response->getStatusCode() === Http::STATUS_OK) {
-			$avatarData = $response->getBody();
-			$avatarImage = new OC_Image();
-			if ($avatarImage->loadFromData($avatarData)) {
-				 $avatar = $avatarImage;
-			} else {
-			    $this->logger->error("Failed to load image from data");
+        if ($response->getStatusCode() === Http::STATUS_OK) {
+            $avatarData = $response->getBody();
+            $avatarImage = new OC_Image();
+            if ($avatarImage->loadFromData($avatarData)) {
+                $avatar = $avatarImage;
+            } else {
+                $this->logger->error("Failed to load image from data");
             }
-		}
+        }
 
 
-		return $avatar;
-	}
+        return $avatar;
+    }
 
-	/**
-	 * Builds the traQ avatar request url.
-	 *
-	 * @param string $traqId The traQ ID
-	 * @return string
-	 */
-	private function buildTraqRequestUrl(string $traqId): string {
-		return sprintf(self::TRAQ_AVATAR_URL, $traqId);
-	}
+    /**
+     * Builds the traQ avatar request url.
+     *
+     * @param string $traqId The traQ ID
+     * @return string
+     */
+    private function buildTraqRequestUrl(string $traqId): string
+    {
+        return sprintf(self::TRAQ_AVATAR_URL, $traqId);
+    }
 }

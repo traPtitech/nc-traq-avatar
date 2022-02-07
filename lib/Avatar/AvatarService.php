@@ -30,12 +30,13 @@ use OCP\IUser;
 /**
  * Interface for avatar services.
  */
-interface AvatarService {
-	/**
-	 * Queries the avatar for an user.
-	 *
-	 * @param IUser $user The user to query the avatar for.
-	 * @return IImage|null The avatar as image or null if none found.
-	 */
-	public function query(IUser $user);
+interface AvatarService
+{
+    /**
+     * Queries the avatar for an user.
+     *
+     * @param IUser $user The user to query the avatar for.
+     * @return IImage|null The avatar as image or null if none found.
+     */
+    public function query(IUser $user);
 }
