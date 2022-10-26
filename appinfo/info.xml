@@ -16,6 +16,7 @@ This plugin is a fork of https://github.com/weeman1337/nextcloud-gravatar]]></de
     <category>integration</category>
     <bugs>https://github.com/traPtitech/nc-traq-avatar/issues</bugs>
     <dependencies>
-        <nextcloud min-version="20" max-version="23"/>
+        <!-- specify max-version to prevent deactivation when updating -->
+        <nextcloud min-version="20" max-version="99"/>
     </dependencies>
 </info>
