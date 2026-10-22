@@ -26,8 +26,8 @@ namespace OCA\TraqAvatar\Avatar;
 
 use Exception;
 use OC\AppFramework\Http;
-use OC_Image;
 use OCP\Http\Client\IClient;
+use OCP\Image;
 use OCP\IImage;
 use OCP\IUser;
 use Psr\Log\LoggerInterface;
@@ -100,7 +100,7 @@ class TraqAvatarService implements AvatarService
 
         if ($response->getStatusCode() === Http::STATUS_OK) {
             $avatarData = $response->getBody();
-            $avatarImage = new OC_Image();
+            $avatarImage = new Image();
             if ($avatarImage->loadFromData($avatarData)) {
                 $avatar = $avatarImage;
             } else {
